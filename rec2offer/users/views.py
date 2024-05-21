@@ -10,6 +10,7 @@ from .serializers import (
     UserSerializer,UserViewSerializer,
     
 )
+from .models import models
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated,AllowAny
@@ -136,4 +137,34 @@ class UserCreate(GenericAPIView):
         except Exception as e:
              return Response(str(e))
         
+class GetId(GenericAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserViewSerializer
+    queryset = User.objects.all()  # Set the queryset to retrieve all User objects
 
+    def get(self, request, id=None):  # Add id parameter to the method
+        try:
+            if id is None:
+                return Response({"error": "ID parameter is missing."}, status=status.HTTP_400_BAD_REQUEST)
+            print(id)
+            user = User.objects.get(pk=id)  # Use the queryset properly and filter by id
+            serializers = self.get_serializer(user)
+            return Response({"fields": serializers.data}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def post(self, request):
+        try:
+            data = request.data
+            serializers = self.get_serializer(data=data)
+
+            if serializers.is_valid():
+                serializers.save()
+                return Response(serializers.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
