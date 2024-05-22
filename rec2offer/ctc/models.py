@@ -2,6 +2,7 @@ from django.db import models
 
 class HrTeam(models.Model):
     employee_id = models.CharField(primary_key=True, max_length=10)
+    employee_name = models.CharField(max_length=50,null=True)
     reference_number = models.IntegerField(null=True)
     designation = models.CharField(max_length=100, null=True)
     ctc = models.IntegerField(null=True)

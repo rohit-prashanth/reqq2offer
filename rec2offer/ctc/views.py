@@ -9,6 +9,8 @@ from rest_framework import status
 
 from .serializers import EmployeeViewSerializer, EmployeeDetailsSerializer, CustomerSerializer
 from .models import HrTeam, EmployeeDetails, Customer
+from .create_offer_1 import create_offer
+from rec2offer.settings import BASE_DIR
 
 # Create your views here.
 class HrTeamView(GenericAPIView):
@@ -53,3 +55,28 @@ class HrTeamView(GenericAPIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        
+
+class CreateOfferLetter(GenericAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = EmployeeViewSerializer
+    queryset = HrTeam.objects.all()
+
+    def post(self, request):
+        """
+        Handle POST requests to create a new HR team member.
+        """
+        try:
+            data = request.data
+            
+            if 'ctc' in data and 'name' in data and 'designation' in data:
+                offer = create_offer(data)
+                print(offer)
+                if offer:
+                    return Response({"status":"created successfully"}, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({"error":"Salary structure has not created."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+CreateOfferLetter
