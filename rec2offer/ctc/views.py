@@ -77,6 +77,8 @@ class CreateOfferLetter(GenericAPIView):
                     return Response({"status":"created successfully"}, status=status.HTTP_201_CREATED)
                 else:
                     return Response({"error":"Salary structure has not created."}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"error":"Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
-CreateOfferLetter
