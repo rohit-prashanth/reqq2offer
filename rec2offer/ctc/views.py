@@ -74,7 +74,7 @@ class CreateOfferLetter(GenericAPIView):
                 offer = create_offer(data)
                 print(offer)
                 if offer:
-                    return Response({"status":"created successfully"}, status=status.HTTP_201_CREATED)
+                    return Response(offer, status=status.HTTP_201_CREATED)
                 else:
                     return Response({"error":"Salary structure has not created."}, status=status.HTTP_400_BAD_REQUEST)
             else:

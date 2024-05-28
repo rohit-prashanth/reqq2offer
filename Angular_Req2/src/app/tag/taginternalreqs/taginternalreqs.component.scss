@@ -1,0 +1,31 @@
+span.only-show-on-hover {
+    visibility: hidden;
+}
+span.only-show-on-hover  {
+    visibility: visible;
+}
+
+.has-danger .form-control-feedback{color:#d9534f}
+.disabled {
+    // pointer-events: none;
+    // cursor: default;
+    color:grey;
+  }
+
+ 
+
+input + span {
+  padding-right: 30px;
+}
+
+input:invalid+span:after {
+  position: absolute;
+  content: '✖';
+  padding-left: 5px;
+}
+
+input:valid+span:after {
+  position: absolute;
+  content: '✓';
+  padding-left: 5px;
+}
