@@ -80,7 +80,7 @@ def create_offer(data):
             table
         ]
         pdf.build(elems)
-        return True
+        return {"status":"created successfully","path":file_name}
     except Exception as e:
         print(e)
         return False
