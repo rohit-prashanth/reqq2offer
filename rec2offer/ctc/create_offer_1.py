@@ -51,6 +51,7 @@ def create_offer(data):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         print(base_dir)
         file_name = os.path.join(base_dir, f"offer_letters\{name}.pdf")
+        print(file_name,type(file_name))
         pdf = SimpleDocTemplate(file_name, pagesize=A4)
         table = Table(data)
         style = TableStyle([
@@ -80,7 +81,7 @@ def create_offer(data):
             table
         ]
         pdf.build(elems)
-        return {"status":"created successfully","path":file_name}
+        return {"status":"created successfully","path":str(file_name)}
     except Exception as e:
         print(e)
         return False
