@@ -19,15 +19,15 @@ export class OfferLetterComponent implements OnInit {
     offerLetter: FormGroup;
     data: string;
     message: any;
+    remoteAddress="127.0.0.1:8000";
+    finalURL:any;
     constructor(private fb: FormBuilder, private routerNavigate: Router, private ar: ActivatedRoute,
         private as: ApiservicesService, private http: HttpClient, private location: LocationStrategy,    private sanitizer: DomSanitizer) {
         this.urlvalues = this.ar.snapshot.queryParams;
         console.log(this.urlvalues);
         history.pushState(null, null, window.location.href);
-        // check if back or forward button is pressed.
         this.location.onPopState(() => {
             history.pushState(null, null, window.location.href);
-            // this.stepper.previous();
         });
     }
 
@@ -54,23 +54,10 @@ export class OfferLetterComponent implements OnInit {
         this.routerNavigate.navigate(['/login'])
         localStorage.removeItem('token')
     }
-    // generate(){
-    //     let payload:any={
-    //         name:this.offerLetter.value.name,
-    //         designation:this.offerLetter.value.designation,
-    //         ctc:this.offerLetter.value.ctc,
-    //         description:this.offerLetter.value.description
-    //     }
-    //     this.as.generateOffer(payload).subscribe((res:any)=>{
-    //         console.log("res",res)
-    //         this.message=res.status
-    //         console.log( this.message,"status")
-    //         const downloadUrl = res.path; 
-    //         this.downloadFile(downloadUrl);
-    //     })
-    // }
+   
 
     generate() {
+        const offerlettertitleName=`${this.offerLetter.value.name}_${this.offerLetter.value.designation}`;
         let payload: any = {
             name: this.offerLetter.value.name,
             designation: this.offerLetter.value.designation,
@@ -83,35 +70,28 @@ export class OfferLetterComponent implements OnInit {
             console.log(this.message, "status");
             this.downloadURL = res.path;
             console.log(this.downloadURL, "path")
-            this.downloadURL = this.sanitizer.bypassSecurityTrustUrl(this.downloadURL);
-        //     if (this.downloadURL.startsWith("file:///")) {
-        //     this.downloadURL = this.downloadURL.substring("file:///".length);
-        // }
-            // window.location.href = this.downloadURL;
-            // var link = document.createElement("a");
-            // link.href = this.downloadURL;
-            // console.log(link);
-            // this.hrefLink=link.href.slice(8);
-            // console.log(this.hrefLink,"link")
-            // link.href = this.hrefLink;
-            // console.log(link);
-            // link.download = "sample.pdf"
-            // document.body.appendChild(link);
-            // console.log(this.hrefLink);
-            // link.click();
-            // document.body.removeChild(link);
-            // this.downloadFile(this.downloadURL)
+            this.finalURL = `http://${this.remoteAddress}${this.downloadURL}`;
+            console.log(this.finalURL, "final URL");
+        
+            this.downloadPDF(this.finalURL,offerlettertitleName);
+            
         });
 
     }
-    // downloadFile(downloadUrl: string) {
-    //     this.http.get(downloadUrl, { responseType: 'blob' }).subscribe((blob: Blob) => {
-    //         saveAs(blob, 'offer_letter.pdf');
-    //     }, error => {
-    //         console.error("Download error:", error);
-    //     });
-    // }
-
-
-
+    downloadPDF(url: string, filename: string) {
+        fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = downloadUrl;
+                a.download = `${filename}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(downloadUrl);
+                document.body.removeChild(a);
+            })
+            .catch(err => console.error('Error downloading the PDF:', err));
+    }
 }
