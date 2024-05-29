@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from reportlab.platypus import Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm
@@ -7,12 +8,18 @@ from reportlab.platypus import Table
 from reportlab.platypus import TableStyle
 from reportlab.lib import colors
 import os
+
  
 def create_offer(data):
     try:
         name = data['name']
         designation = data['designation']
+
         ctc = data['ctc']
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{name}_{designation}.pdf"'
+        
         pm = round((int(ctc)/12),2)
         basic = round(((int(pm) * (40 / 100))*12),2)
         epf = round( (basic * (12 / 100)),2 )
@@ -51,8 +58,9 @@ def create_offer(data):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         print(base_dir)
         file_name = os.path.join(base_dir, f"offer_letters\{name}.pdf")
-        print(file_name,type(file_name))
-        pdf = SimpleDocTemplate(file_name, pagesize=A4)
+        # pdf = SimpleDocTemplate(file_name, pagesize=A4)
+        pdf = SimpleDocTemplate(response, pagesize=A4)
+
         table = Table(data)
         style = TableStyle([
             ('TEXTCOLOR',(0,0),(-1,0),colors.black),
@@ -81,7 +89,8 @@ def create_offer(data):
             table
         ]
         pdf.build(elems)
-        return {"status":"created successfully","path":str(file_name)}
+        # return {"status":"created successfully","path":file_name}
+        return response
     except Exception as e:
         print(e)
         return False
