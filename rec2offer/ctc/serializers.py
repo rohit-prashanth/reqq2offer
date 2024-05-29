@@ -38,3 +38,9 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = '__all__'
+
+class PDFGenerationSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100)
+    designation = serializers.CharField(max_length=100)
+    ctc = serializers.IntegerField()
+    # Add more fields as needed

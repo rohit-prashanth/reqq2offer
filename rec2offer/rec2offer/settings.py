@@ -92,7 +92,7 @@ DATABASES = {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': 'rec_db',
             'USER' : 'postgres',
-            'PASSWORD' : 'root',
+            'PASSWORD' : 'viju_1985',
             'HOST' : 'localhost',
             'PORT' : '5432',
             }
@@ -133,6 +133,11 @@ USE_L10N = True
 
 USE_TZ=False
 
+# Define the URL prefix to use for serving media files
+MEDIA_URL = '/media/'
+import os
+# Define the filesystem path where uploaded files will be stored
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/

@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 
+
 urlpatterns = [
     path('employee-get/', views.HrTeamView.as_view(), name='employee_list'),
     path('employee-get/<str:id>/', views.HrTeamView.as_view(), name='employee_detail'),
@@ -13,3 +14,4 @@ urlpatterns = [
     # path('create-user/', views.UserCreate.as_view(), name='create_user'),
     # path('user/<int:id>/', views.GetId.as_view(), name='get_user'),
 ]
+
