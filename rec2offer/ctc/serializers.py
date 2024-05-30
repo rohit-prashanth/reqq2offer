@@ -43,4 +43,5 @@ class PDFGenerationSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     designation = serializers.CharField(max_length=100)
     ctc = serializers.IntegerField()
+    description = serializers.CharField(max_length = 1000)
     # Add more fields as needed

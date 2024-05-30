@@ -13,8 +13,8 @@ import os
 def create_offer(data):
     try:
         name = data['name']
-        designation = data['designation']
-
+        designation  = data['designation']
+        description = data['description']
         ctc = data['ctc']
 
         response = HttpResponse(content_type='application/pdf')
@@ -86,6 +86,9 @@ def create_offer(data):
             Spacer(1, 1),
             Paragraph(f'Designation: {designation}'),
             Spacer(1 * cm, 1 * cm),
+            Paragraph(description),
+            Spacer(1 * cm, 1 * cm),
+            
             table
         ]
         pdf.build(elems)
