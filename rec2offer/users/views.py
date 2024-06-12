@@ -27,9 +27,6 @@ from rest_framework.parsers import JSONParser
 import os
 
 
-
-
-
 # Create your views here.
 class Userlogin(APIView):
     permission_classes = [AllowAny]
@@ -90,8 +87,6 @@ class ViewUser(GenericAPIView):
     permission_classes = [IsAuthenticated]
     # queryset = model.objects.all()
     
-    
-    
     def get(self,request):
         try:
             # meta = request.META
@@ -106,8 +101,6 @@ class ViewUser(GenericAPIView):
         except Exception as e:
             return Response(str(e))
             
-
-
 
 
 class UserCreate(GenericAPIView):

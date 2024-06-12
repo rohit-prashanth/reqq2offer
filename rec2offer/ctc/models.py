@@ -71,3 +71,5 @@ class EmployeeDetails(models.Model):  # Renamed for consistent camel case naming
 
 class DummyTable(models.Model):
     name = models.CharField(max_length=50)
+    email = models.EmailField(max_length=50,null=True)
+    number = models.CharField(max_length=20,null=True)

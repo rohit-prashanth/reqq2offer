@@ -20,6 +20,9 @@ from django.db import connection
 
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from django.db import connection, models
+from django.core.management import call_command
+from django.apps import apps
 
 # Create your views here.
 class HrTeamView(GenericAPIView):
@@ -135,18 +138,64 @@ class ColumnCreationAPIView(GenericAPIView):
     serializer_class = EmployeeViewSerializer
     queryset = HrTeam.objects.all()
     
-    def post(self, request):
-        serializer = ColumnCreationSerializer(data=request.data)
-        if serializer.is_valid():
-            column_name = serializer.validated_data['column_name']
-            data_type = serializer.validated_data['data_type']
-            table_name = serializer.validated_data['table_name']
+    # def post(self, request):
+    #     try:
+    #         serializer = ColumnCreationSerializer(data=request.data)
+    #         if serializer.is_valid():
+    #             column_name = serializer.validated_data['column_name']
+    #             data_type = serializer.validated_data['data_type']
+    #             table_name = serializer.validated_data['table_name']
 
-            with connection.cursor() as cursor:
-                # Execute raw SQL to alter table and add column
-                query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type};"
-                cursor.execute(query)
-            
-            return Response({'message': f'Column {column_name} added to table {table_name}'}, status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #             with connection.cursor() as cursor:
+    #                 # Execute raw SQL to alter table and add column
+    #                 query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type};"
+    #                 cursor.execute(query)
+                
+    #             return Response({'message': f'Column {column_name} added to table {table_name}'}, status=status.HTTP_200_OK)
+    #         else:
+    #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     except Exception as e:
+    #         return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request, format=None):
+        try:
+            serializer = ColumnCreationSerializer(data=request.data)
+            if serializer.is_valid():
+                column_name = serializer.validated_data['column_name']
+                data_type = serializer.validated_data['data_type']
+                table_name = serializer.validated_data['table_name']
+            # table_name = request.data.get('table_name')
+            # column_name = request.data.get('column_name')
+            # column_type = request.data.get('column_type')
+
+                if not table_name or not column_name or not data_type:
+                    return Response({'error': 'Missing parameters'}, status=status.HTTP_400_BAD_REQUEST)
+
+                # Validate column type
+                column_types = {
+                    'char': 'CharField(max_length=255)',
+                    'text': 'TextField()',
+                    'integer': 'IntegerField()',
+                    'boolean': 'BooleanField()'
+                }
+
+                if data_type not in column_types:
+                    return Response({'error': 'Invalid column type'}, status=status.HTTP_400_BAD_REQUEST)
+
+                myapp = 'ctc'
+                
+                # Dynamically add the new field to the model
+                model = apps.get_model(myapp, table_name)
+                field = models.CharField(max_length=255,null=True) if data_type == 'char' else models.TextField(null=True) if data_type == 'text' else models.IntegerField(null=True) if data_type == 'integer' else models.BooleanField(default=False)
+
+                field.contribute_to_class(model, column_name)
+
+                # Create a migration for the new field
+                call_command('makemigrations', myapp)
+                call_command('migrate', myapp)
+
+                return Response({'status': 'column added'}, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
