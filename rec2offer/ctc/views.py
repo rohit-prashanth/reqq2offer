@@ -8,12 +8,14 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 
-from .serializers import EmployeeViewSerializer, EmployeeDetailsSerializer, CustomerSerializer,PDFGenerationSerializer
+from .serializers import (EmployeeViewSerializer, EmployeeDetailsSerializer, 
+                        CustomerSerializer,PDFGenerationSerializer,ColumnCreationSerializer)
 from .models import HrTeam, EmployeeDetails, Customer
 from .create_offer_1 import create_offer
 from rec2offer.settings import BASE_DIR
 import os
 from rec2offer import settings
+from django.db import connection
 
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -124,3 +126,26 @@ class CreateOfferLetter(GenericAPIView):
         p.showPage()
         p.save()
         return response
+    
+
+class ColumnCreationAPIView(GenericAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = EmployeeViewSerializer
+    queryset = HrTeam.objects.all()
+    
+    def post(self, request):
+        serializer = ColumnCreationSerializer(data=request.data)
+        if serializer.is_valid():
+            column_name = serializer.validated_data['column_name']
+            data_type = serializer.validated_data['data_type']
+            table_name = serializer.validated_data['table_name']
+
+            with connection.cursor() as cursor:
+                # Execute raw SQL to alter table and add column
+                query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type};"
+                cursor.execute(query)
+            
+            return Response({'message': f'Column {column_name} added to table {table_name}'}, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

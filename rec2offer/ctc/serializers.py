@@ -45,3 +45,9 @@ class PDFGenerationSerializer(serializers.Serializer):
     ctc = serializers.IntegerField()
     description = serializers.CharField(max_length = 1000)
     # Add more fields as needed
+
+
+class ColumnCreationSerializer(serializers.Serializer):
+    column_name = serializers.CharField(max_length=100)
+    data_type = serializers.CharField(max_length=100)
+    table_name = serializers.CharField(max_length=100)  # Assuming you'll also provide the table name

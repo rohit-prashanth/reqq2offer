@@ -27,7 +27,6 @@
     "@types/jquery": "^3.3.30",
     "angular-font-awesome": "^3.1.2",
     "core-js": "^2.5.4",
-    "file-saver": "^2.0.5",
     "font-awesome": "^4.7.0",
     "ng": "0.0.0",
     "ng2-order-pipe": "^0.1.5",
@@ -41,6 +40,7 @@
     "rxjs": "^6.3.3",
     "sweetalert": "^2.1.2",
     "sweetalert2": "^8.18.4",
+
     "tslib": "^1.9.0",
     "zone.js": "~0.8.26"
   },

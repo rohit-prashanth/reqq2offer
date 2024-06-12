@@ -68,3 +68,6 @@ class EmployeeDetails(models.Model):  # Renamed for consistent camel case naming
 
 #     def __str__(self):
 #         return f"Interview {self.reference_number} on {self.interview_date}"
+
+class DummyTable(models.Model):
+    name = models.CharField(max_length=50)

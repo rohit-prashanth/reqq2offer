@@ -41,3 +41,10 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+# Django specific
+*.log
+*.pot
+*.pyc
+*/__pycache__/*
+*/migrations/*
