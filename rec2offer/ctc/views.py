@@ -7,6 +7,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
+from django.contrib.auth import authenticate
 
 from .serializers import (EmployeeViewSerializer, EmployeeDetailsSerializer, 
                         CustomerSerializer,PDFGenerationSerializer,ColumnCreationSerializer)
