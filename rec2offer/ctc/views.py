@@ -218,6 +218,7 @@ class DummyDataAPIView(GenericAPIView):
         with connection.cursor() as cursor:
             try:
                 cursor.execute(f'SELECT * FROM {table_name}')
+                # cursor.execute(f"SELECT name FROM sys.columns WHERE object_id = OBJECT_ID({table_name})")
                 columns = [col[0] for col in cursor.description]
                 rows = cursor.fetchall()
                 results = [dict(zip(columns, row)) for row in rows]
