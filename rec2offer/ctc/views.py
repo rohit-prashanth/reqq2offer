@@ -146,7 +146,7 @@ class ColumnCreationAPIView(GenericAPIView):
             if serializer.is_valid():
                 column_name = serializer.validated_data['column_name']
                 data_type = serializer.validated_data['data_type']
-                table_name = serializer.validated_data['table_name']
+                table_name = 'ctc_dummytable'
 
                 with connection.cursor() as cursor:
                     # Execute raw SQL to alter table and add column
@@ -220,6 +220,7 @@ class DummyDataAPIView(GenericAPIView):
         with connection.cursor() as cursor:
             try:
                 cursor.execute(f'SELECT * FROM {table_name}')
+                # cursor.execute(f"SELECT name FROM sys.columns WHERE object_id = OBJECT_ID({table_name})")
                 columns = [col[0] for col in cursor.description]
                 print(columns)
                 results=columns
@@ -231,6 +232,35 @@ class DummyDataAPIView(GenericAPIView):
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
         return Response(results, status=status.HTTP_200_OK)
+    
+    def post(self, request, format=None):
+        # table_name = request.data.get('table_name')
+        table_name = 'ctc_newtable'
+        data = request.data
+
+        # if not table_name or not data:
+        #     return Response({'error': 'Table name and data are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate data format
+        if not isinstance(data, dict):
+            return Response({'error': 'Data must be a dictionary'}, status=status.HTTP_400_BAD_REQUEST)
+
+        columns = ', '.join(data.keys())
+        placeholders = ', '.join(['%s'] * len(data))
+        values = list(data.values())
+        print(columns)
+        print(placeholders)
+        print(values)
+        try:
+            with connection.cursor() as cursor:
+                query = f'INSERT INTO {table_name} ({columns}) VALUES ({placeholders})'
+                cursor.execute(query, values)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'status': 'record saved'}, status=status.HTTP_201_CREATED)
+
+
 class GetDummyDataAPIView(APIView):
     def get(self, request, format=None):
         table_name = 'ctc_newtable'
@@ -277,3 +307,5 @@ class GetDummyDataAPIView(APIView):
 #             return Response({'message': 'Data saved successfully'}, status=status.HTTP_201_CREATED)
 #         except Exception as e:
 #             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(results, status=status.HTTP_200_OK)
+    
