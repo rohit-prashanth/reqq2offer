@@ -138,67 +138,67 @@ class ColumnCreationAPIView(GenericAPIView):
     serializer_class = EmployeeViewSerializer
     # queryset = HrTeam.objects.all()
     
-    # def post(self, request):
-    #     try:
-    #         serializer = ColumnCreationSerializer(data=request.data)
-    #         if serializer.is_valid():
-    #             column_name = serializer.validated_data['column_name']
-    #             data_type = serializer.validated_data['data_type']
-    #             table_name = serializer.validated_data['table_name']
-
-    #             with connection.cursor() as cursor:
-    #                 # Execute raw SQL to alter table and add column
-    #                 query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type};"
-    #                 cursor.execute(query)
-                
-    #             return Response({'message': f'Column {column_name} added to table {table_name}'}, status=status.HTTP_200_OK)
-    #         else:
-    #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    #     except Exception as e:
-    #         return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
-
-    def post(self, request, format=None):
+    def post(self, request):
         try:
             serializer = ColumnCreationSerializer(data=request.data)
             if serializer.is_valid():
                 column_name = serializer.validated_data['column_name']
                 data_type = serializer.validated_data['data_type']
                 table_name = serializer.validated_data['table_name']
-            # table_name = request.data.get('table_name')
-            # column_name = request.data.get('column_name')
-            # column_type = request.data.get('column_type')
 
-                if not table_name or not column_name or not data_type:
-                    return Response({'error': 'Missing parameters'}, status=status.HTTP_400_BAD_REQUEST)
-
-                # Validate column type
-                column_types = [
-                    'char',
-                    'text',
-                    'integer',
-                    'boolean'
-                ]
-
-                if data_type not in column_types:
-                    return Response({'error': 'Invalid column type'}, status=status.HTTP_400_BAD_REQUEST)
-
-                myapp = 'ctc'
+                with connection.cursor() as cursor:
+                    # Execute raw SQL to alter table and add column
+                    query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type};"
+                    cursor.execute(query)
                 
-                # Dynamically add the new field to the model
-                model = apps.get_model(myapp, table_name)
-                field = models.CharField(max_length=255,null=True) if data_type == 'char' else models.TextField(null=True) if data_type == 'text' else models.IntegerField(null=True) if data_type == 'integer' else models.BooleanField(default=False)
-
-                field.contribute_to_class(model, column_name)
-
-                # Create a migration for the new field
-                call_command('makemigrations', myapp)
-                call_command('migrate', myapp)
-
-                return Response({'status': 'column added'}, status=status.HTTP_201_CREATED)
+                return Response({'message': f'Column {column_name} added to table {table_name}'}, status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+    # def post(self, request, format=None):
+    #     try:
+    #         serializer = ColumnCreationSerializer(data=request.data)
+    #         if serializer.is_valid():
+    #             column_name = serializer.validated_data['column_name']
+    #             data_type = serializer.validated_data['data_type']
+    #             table_name = serializer.validated_data['table_name']
+    #         # table_name = request.data.get('table_name')
+    #         # column_name = request.data.get('column_name')
+    #         # column_type = request.data.get('column_type')
+
+    #             if not table_name or not column_name or not data_type:
+    #                 return Response({'error': 'Missing parameters'}, status=status.HTTP_400_BAD_REQUEST)
+
+    #             # Validate column type
+    #             column_types = [
+    #                 'char',
+    #                 'text',
+    #                 'integer',
+    #                 'boolean'
+    #             ]
+
+    #             if data_type not in column_types:
+    #                 return Response({'error': 'Invalid column type'}, status=status.HTTP_400_BAD_REQUEST)
+
+    #             myapp = 'ctc'
+                
+    #             # Dynamically add the new field to the model
+    #             model = apps.get_model(myapp, table_name)
+    #             field = models.CharField(max_length=255,null=True) if data_type == 'char' else models.TextField(null=True) if data_type == 'text' else models.IntegerField(null=True) if data_type == 'integer' else models.BooleanField(default=False)
+
+    #             field.contribute_to_class(model, column_name)
+
+    #             # Create a migration for the new field
+    #             call_command('makemigrations', myapp)
+    #             call_command('migrate', myapp)
+
+    #             return Response({'status': 'column added'}, status=status.HTTP_201_CREATED)
+    #         else:
+    #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     except Exception as e:
+    #         return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -206,22 +206,22 @@ class ColumnCreationAPIView(GenericAPIView):
 class DummyDataAPIView(GenericAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    serializer_class = DummyDataSerializer
-    queryset = DummyTable.objects.all()
+    # serializer_class = DummyDataSerializer
+    # queryset = DummyTable.objects.all()
 
-    def get(self, request, id=None):
+
+    def get(self, request, format=None):
+        # table_name = request.query_params.get('table_name')
+        table_name = 'ctc_dummytable'
         
-        try:
-            if id is None:
-                # Fetch all HR team members
-                data = self.get_queryset()
-                serializer = self.get_serializer(data, many=True)
-                return Response({"fields": serializer.data}, status=status.HTTP_200_OK)
-            else:
-                # Fetch a specific HR team member by ID
-                # hr_member = get_object_or_404(self.queryset, pk=id)
-                data = HrTeam.objects.get(pk=id)
-                serializer = self.get_serializer(data)
-                return Response({"fields": serializer.data}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        
+        with connection.cursor() as cursor:
+            try:
+                cursor.execute(f'SELECT * FROM {table_name}')
+                columns = [col[0] for col in cursor.description]
+                rows = cursor.fetchall()
+                results = [dict(zip(columns, row)) for row in rows]
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(results, status=status.HTTP_200_OK)
