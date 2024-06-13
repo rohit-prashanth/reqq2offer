@@ -133,8 +133,8 @@ class CreateOfferLetter(GenericAPIView):
     
 
 class ColumnCreationAPIView(GenericAPIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
     serializer_class = EmployeeViewSerializer
     # queryset = HrTeam.objects.all()
     
@@ -204,8 +204,8 @@ class ColumnCreationAPIView(GenericAPIView):
 
 
 class DummyDataAPIView(GenericAPIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
     # serializer_class = DummyDataSerializer
     # queryset = DummyTable.objects.all()
 
@@ -225,3 +225,30 @@ class DummyDataAPIView(GenericAPIView):
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
         return Response(results, status=status.HTTP_200_OK)
+    
+    def post(self, request, format=None):
+        # table_name = request.data.get('table_name')
+        table_name = 'ctc_dummytable'
+        data = request.data
+
+        # if not table_name or not data:
+        #     return Response({'error': 'Table name and data are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate data format
+        if not isinstance(data, dict):
+            return Response({'error': 'Data must be a dictionary'}, status=status.HTTP_400_BAD_REQUEST)
+
+        columns = ', '.join(data.keys())
+        placeholders = ', '.join(['%s'] * len(data))
+        values = list(data.values())
+        print(columns)
+        print(placeholders)
+        print(values)
+        try:
+            with connection.cursor() as cursor:
+                query = f'INSERT INTO {table_name} ({columns}) VALUES ({placeholders})'
+                cursor.execute(query, values)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'status': 'record saved'}, status=status.HTTP_201_CREATED)
