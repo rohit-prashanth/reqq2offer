@@ -9,9 +9,9 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from django.contrib.auth import authenticate
 
-from .serializers import (EmployeeViewSerializer, EmployeeDetailsSerializer, 
+from .serializers import (EmployeeViewSerializer, EmployeeDetailsSerializer,DummyDataSerializer, 
                         CustomerSerializer,PDFGenerationSerializer,ColumnCreationSerializer)
-from .models import HrTeam, EmployeeDetails, Customer
+from .models import HrTeam, EmployeeDetails, Customer,DummyTable
 from .create_offer_1 import create_offer
 from rec2offer.settings import BASE_DIR
 import os
@@ -136,7 +136,7 @@ class ColumnCreationAPIView(GenericAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = EmployeeViewSerializer
-    queryset = HrTeam.objects.all()
+    # queryset = HrTeam.objects.all()
     
     # def post(self, request):
     #     try:
@@ -172,12 +172,12 @@ class ColumnCreationAPIView(GenericAPIView):
                     return Response({'error': 'Missing parameters'}, status=status.HTTP_400_BAD_REQUEST)
 
                 # Validate column type
-                column_types = {
-                    'char': 'CharField(max_length=255)',
-                    'text': 'TextField()',
-                    'integer': 'IntegerField()',
-                    'boolean': 'BooleanField()'
-                }
+                column_types = [
+                    'char',
+                    'text',
+                    'integer',
+                    'boolean'
+                ]
 
                 if data_type not in column_types:
                     return Response({'error': 'Invalid column type'}, status=status.HTTP_400_BAD_REQUEST)
@@ -199,3 +199,29 @@ class ColumnCreationAPIView(GenericAPIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class DummyDataAPIView(GenericAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = DummyDataSerializer
+    queryset = DummyTable.objects.all()
+
+    def get(self, request, id=None):
+        
+        try:
+            if id is None:
+                # Fetch all HR team members
+                data = self.get_queryset()
+                serializer = self.get_serializer(data, many=True)
+                return Response({"fields": serializer.data}, status=status.HTTP_200_OK)
+            else:
+                # Fetch a specific HR team member by ID
+                # hr_member = get_object_or_404(self.queryset, pk=id)
+                data = HrTeam.objects.get(pk=id)
+                serializer = self.get_serializer(data)
+                return Response({"fields": serializer.data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)

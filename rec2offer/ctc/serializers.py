@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import HrTeam, EmployeeDetails, Customer
+from .models import HrTeam, EmployeeDetails, Customer,DummyTable
 
 class EmployeeViewSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,3 +51,9 @@ class ColumnCreationSerializer(serializers.Serializer):
     column_name = serializers.CharField(max_length=100)
     data_type = serializers.CharField(max_length=100)
     table_name = serializers.CharField(max_length=100)  # Assuming you'll also provide the table name
+
+
+class DummyDataSerializer(serializers.Serializer):
+    class Meta:
+        model = DummyTable
+        fields = '__all__'
