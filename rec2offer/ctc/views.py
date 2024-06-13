@@ -11,7 +11,7 @@ from django.contrib.auth import authenticate
 
 from .serializers import (EmployeeViewSerializer, EmployeeDetailsSerializer,DummyDataSerializer, 
                         CustomerSerializer,PDFGenerationSerializer,ColumnCreationSerializer)
-from .models import HrTeam, EmployeeDetails, Customer,DummyTable
+from .models import HrTeam, EmployeeDetails, Customer,NewTable
 from .create_offer_1 import create_offer
 from rec2offer.settings import BASE_DIR
 import os
@@ -23,6 +23,8 @@ from reportlab.pdfgen import canvas
 from django.db import connection, models
 from django.core.management import call_command
 from django.apps import apps
+from django.shortcuts import render
+import json
 
 # Create your views here.
 class HrTeamView(GenericAPIView):
@@ -207,12 +209,12 @@ class DummyDataAPIView(GenericAPIView):
     # authentication_classes = [JWTAuthentication]
     # permission_classes = [IsAuthenticated]
     # serializer_class = DummyDataSerializer
-    # queryset = DummyTable.objects.all()
+    # queryset = NewTable.objects.all()
 
 
     def get(self, request, format=None):
         # table_name = request.query_params.get('table_name')
-        table_name = 'ctc_dummytable'
+        table_name = 'ctc_newtable'
         
         
         with connection.cursor() as cursor:
@@ -220,8 +222,12 @@ class DummyDataAPIView(GenericAPIView):
                 cursor.execute(f'SELECT * FROM {table_name}')
                 # cursor.execute(f"SELECT name FROM sys.columns WHERE object_id = OBJECT_ID({table_name})")
                 columns = [col[0] for col in cursor.description]
-                rows = cursor.fetchall()
-                results = [dict(zip(columns, row)) for row in rows]
+                print(columns)
+                results=columns
+                # rows = cursor.fetchall()
+                # print(rows)
+                # results = [dict(zip(columns, row)) for row in rows]
+                
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -229,7 +235,7 @@ class DummyDataAPIView(GenericAPIView):
     
     def post(self, request, format=None):
         # table_name = request.data.get('table_name')
-        table_name = 'ctc_dummytable'
+        table_name = 'ctc_newtable'
         data = request.data
 
         # if not table_name or not data:
@@ -253,3 +259,53 @@ class DummyDataAPIView(GenericAPIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'status': 'record saved'}, status=status.HTTP_201_CREATED)
+
+
+class GetDummyDataAPIView(APIView):
+    def get(self, request, format=None):
+        table_name = 'ctc_newtable'
+        
+        with connection.cursor() as cursor:
+            try:
+                cursor.execute(f'SELECT * FROM {table_name}')
+                columns = [col[0] for col in cursor.description]
+                rows = cursor.fetchall()
+                results = [dict(zip(columns, row)) for row in rows]
+
+                # Get column details
+                cursor.execute(f"""
+                    SELECT column_name, data_type
+                    FROM information_schema.columns
+                    WHERE table_name = '{table_name}'
+                """)
+                column_details = cursor.fetchall()
+                column_info = {col[0]: col[1] for col in column_details}
+                
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        response_data = {
+            'columns': column_info,
+            'rows': results
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+# class RegistrationAPIView(APIView):
+#     def post(self, request, format=None):
+#         try:
+#             data = request.data
+#             table_name = 'ctc_newtable'
+            
+#             # Dynamically generate the insert query
+#             columns = ', '.join(data.keys())
+#             values = ', '.join([f"'{v}'" if isinstance(v, str) else str(v) for v in data.values()])
+#             query = f"INSERT INTO {table_name} ({columns}) VALUES ({values});"
+            
+#             with connection.cursor() as cursor:
+#                 cursor.execute(query)
+            
+#             return Response({'message': 'Data saved successfully'}, status=status.HTTP_201_CREATED)
+#         except Exception as e:
+#             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(results, status=status.HTTP_200_OK)
+    

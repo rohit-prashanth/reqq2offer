@@ -69,7 +69,12 @@ class EmployeeDetails(models.Model):  # Renamed for consistent camel case naming
 #     def __str__(self):
 #         return f"Interview {self.reference_number} on {self.interview_date}"
 
-class DummyTable(models.Model):
+class NewTable(models.Model):
     name = models.CharField(max_length=50)
     email = models.EmailField(max_length=50,null=True)
-    number = models.CharField(max_length=20,null=True)
+    phone = models.CharField(max_length=20,null=True)
+class DynamicFormModel(models.Model):
+    form_data = models.JSONField()
+
+    def __str__(self):
+        return str(self.form_data)
