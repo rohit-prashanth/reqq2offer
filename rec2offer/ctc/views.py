@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from django.contrib.auth import authenticate
 
-from .serializers import (EmployeeViewSerializer, EmployeeDetailsSerializer,DummyDataSerializer, 
+from .serializers import (EmployeeViewSerializer, EmployeeDetailsSerializer, 
                         CustomerSerializer,PDFGenerationSerializer,ColumnCreationSerializer)
 from .models import HrTeam, EmployeeDetails, Customer,NewTable
 from .create_offer_1 import create_offer
@@ -146,7 +146,7 @@ class ColumnCreationAPIView(GenericAPIView):
             if serializer.is_valid():
                 column_name = serializer.validated_data['column_name']
                 data_type = serializer.validated_data['data_type']
-                table_name = 'ctc_dummytable'
+                table_name = 'ctc_newtable'
 
                 with connection.cursor() as cursor:
                     # Execute raw SQL to alter table and add column
