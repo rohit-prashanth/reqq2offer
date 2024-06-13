@@ -144,7 +144,7 @@ class ColumnCreationAPIView(GenericAPIView):
             if serializer.is_valid():
                 column_name = serializer.validated_data['column_name']
                 data_type = serializer.validated_data['data_type']
-                table_name = serializer.validated_data['table_name']
+                table_name = 'ctc_dummytable'
 
                 with connection.cursor() as cursor:
                     # Execute raw SQL to alter table and add column
