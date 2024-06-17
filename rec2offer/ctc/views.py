@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from .serializers import (
-    EmployeeViewSerializer, PDFGenerationSerializer, ColumnCreationSerializer
+    EmployeeViewSerializer, PDFGenerationSerializer, ColumnCreationSerializer,ColumnDropDownCreationSerializer
 )
 from .models import HrTeam, EmployeeDetails, Customer, NewTable
 from .create_offer_1 import create_offer
@@ -86,14 +86,24 @@ class ColumnCreationAPIView(GenericAPIView):
 
     def post(self, request):
         try:
-            serializer = self.get_serializer(data=request.data)
+            if request.data['field_type'] == 'dropdown':
+                serializer = ColumnDropDownCreationSerializer(data=request.data)
+            else:
+                serializer = self.get_serializer(data=request.data)
             if serializer.is_valid():
                 column_name = serializer.validated_data['column_name']
                 data_type = serializer.validated_data['data_type']
+                field_type = serializer.validated_data['field_type']
                 table_name = 'ctc_newtable'
-
-                with connection.cursor() as cursor:
+                print(field_type)
+                if field_type == 'dropdown':
+                    options = serializer.validated_data['options']
+                    options = tuple(options)
+                    query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} ENUM{options};"
+                else:
                     query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type};"
+                    
+                with connection.cursor() as cursor:
                     cursor.execute(query)
                 
                 return Response({'message': f'Column {column_name} added to table {table_name}'}, status=status.HTTP_200_OK)

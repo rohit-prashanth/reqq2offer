@@ -50,7 +50,14 @@ class PDFGenerationSerializer(serializers.Serializer):
 class ColumnCreationSerializer(serializers.Serializer):
     column_name = serializers.CharField(max_length=100)
     data_type = serializers.CharField(max_length=100)
+    field_type = serializers.CharField(max_length=100)
+    
     # table_name = serializers.CharField(max_length=100)  # Assuming you'll also provide the table name
 
 
-
+class ColumnDropDownCreationSerializer(serializers.Serializer):
+    column_name = serializers.CharField(max_length=100)
+    data_type = serializers.CharField(max_length=100)
+    field_type = serializers.CharField(max_length=100)
+    options = serializers.ListField()
+    
