@@ -94,12 +94,17 @@ class ColumnCreationAPIView(GenericAPIView):
                 column_name = serializer.validated_data['column_name']
                 data_type = serializer.validated_data['data_type']
                 field_type = serializer.validated_data['field_type']
-                table_name = 'ctc_newtable'
+                table_name = 'ctc_dummytable'
                 print(field_type)
                 if field_type == 'dropdown':
                     options = serializer.validated_data['options']
                     options = tuple(options)
-                    query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} ENUM{options};"
+                    query = f"""
+                                ALTER TABLE {table_name}
+                                ADD COLUMN {column_name} VARCHAR(50),
+                                ADD CONSTRAINT chk_{column_name}
+                                CHECK ({column_name} IN {options});
+                                """
                 else:
                     query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type};"
                     
@@ -116,7 +121,7 @@ class ColumnCreationAPIView(GenericAPIView):
 class DummyDataAPIView(GenericAPIView):
 
     def get(self, request, format=None):
-        table_name = 'ctc_newtable'
+        table_name = 'ctc_dummytable'
         
         with connection.cursor() as cursor:
             try:
@@ -129,7 +134,7 @@ class DummyDataAPIView(GenericAPIView):
         return Response(results, status=status.HTTP_200_OK)
     
     def post(self, request, format=None):
-        table_name = 'ctc_newtable'
+        table_name = 'ctc_dummytable'
         data = request.data
 
         if not isinstance(data, dict):
