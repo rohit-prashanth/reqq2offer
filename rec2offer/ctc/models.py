@@ -1,4 +1,5 @@
 from django.db import models
+import json
 
 class HrTeam(models.Model):
     employee_id = models.CharField(primary_key=True, max_length=10)
@@ -78,3 +79,17 @@ class DynamicFormModel(models.Model):
 
     def __str__(self):
         return str(self.form_data)
+    
+
+class TableDropdownsList(models.Model):
+    table_name = models.CharField(max_length=100)
+    column_name = models.CharField(max_length=100)
+    elements = models.TextField()
+
+    def set_elements(self, elements_list):
+        self.elements = json.dumps(elements_list)
+
+    def get_elements(self):
+        return json.loads(self.elements)
+
+
