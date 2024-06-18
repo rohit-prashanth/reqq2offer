@@ -86,15 +86,17 @@ class ColumnCreationAPIView(GenericAPIView):
 
     def post(self, request):
         try:
-            if request.data['field_type'] == 'dropdown':
+            if request.data.get('field_type') == 'dropdown':
+                print(request.data.get('field_type'))
                 serializer = ColumnDropDownCreationSerializer(data=request.data)
             else:
                 serializer = self.get_serializer(data=request.data)
             if serializer.is_valid():
+                print("inside is_valid")
                 column_name = serializer.validated_data['column_name']
                 data_type = serializer.validated_data['data_type']
                 field_type = serializer.validated_data['field_type']
-                table_name = 'ctc_dummytable'
+                table_name = 'ctc_newtable'
                 print(field_type)
                 if field_type == 'dropdown':
                     options = serializer.validated_data['options']
@@ -121,7 +123,7 @@ class ColumnCreationAPIView(GenericAPIView):
 class DummyDataAPIView(GenericAPIView):
 
     def get(self, request, format=None):
-        table_name = 'ctc_dummytable'
+        table_name = 'ctc_newtable'
         
         with connection.cursor() as cursor:
             try:
@@ -134,7 +136,7 @@ class DummyDataAPIView(GenericAPIView):
         return Response(results, status=status.HTTP_200_OK)
     
     def post(self, request, format=None):
-        table_name = 'ctc_dummytable'
+        table_name = 'ctc_newtable'
         data = request.data
 
         if not isinstance(data, dict):
