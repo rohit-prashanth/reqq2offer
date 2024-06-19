@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
+from psycopg2.extras import RealDictCursor
 from rest_framework import status
 from .serializers import (
     EmployeeViewSerializer, PDFGenerationSerializer, ColumnCreationSerializer, ColumnDropDownCreationSerializer
@@ -12,12 +13,14 @@ from .serializers import (
 from .models import HrTeam, EmployeeDetails, Customer, NewTable, TableDropdownsList
 from .create_offer_1 import create_offer
 from rec2offer import settings
+import json
 import re
 import os
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from django.db import connection, models
 from django.core.files.storage import FileSystemStorage
+import psycopg2
 
 # HrTeamView class handles CRUD operations for HR team members.
 class HrTeamView(GenericAPIView):
@@ -74,47 +77,75 @@ class CreateOfferLetter(GenericAPIView):
             else:
                 return Response({"error": "Salary structure has not been created."}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class ColumnCreationAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            # Connect to your postgres DB
+            conn = psycopg2.connect(
+                dbname="rec_db",
+                user="postgres",
+                password="viju_1985",
+                host="localhost",
+                port="5432"
+            )
 
-# ColumnCreationAPIView class handles the creation of new columns in a table.
-class ColumnCreationAPIView(GenericAPIView):
-    serializer_class = ColumnCreationSerializer
+            # Create a cursor object
+            cur = conn.cursor()
 
-    def get(self, request, format=None):
-        table_name = 'ctc_newtable'
-        with connection.cursor() as cursor:
-            try:
-                query = f"""
-                    SELECT 
-                        c.column_name, 
-                        c.data_type,
-                        conname AS constraint_name,
-                        pg_get_constraintdef(pg_constraint.oid) AS constraint_definition
-                    FROM 
-                        information_schema.columns c
-                    LEFT JOIN 
-                        pg_constraint 
-                        ON conrelid = (
-                            SELECT oid 
-                            FROM pg_class 
-                            WHERE relname = c.table_name
-                        )
-                        AND conkey[1] = (
-                            SELECT ordinal_position 
-                            FROM information_schema.columns 
-                            WHERE table_name = c.table_name 
-                            AND column_name = c.column_name
-                        )
-                    WHERE 
-                        c.table_name = '{table_name}';
-                """
-                cursor.execute(query)
-                column_details = cursor.fetchall()
-                columns = {col[0]: col[1] for col in column_details}
-                results = column_details
-            except Exception as e:
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            # First query: Fetching all columns from 'ctc_tabledropdownslist'
+            cur.execute("SELECT id, table_name, column_name, column_type, elements FROM public.ctc_tabledropdownslist;")
+            colnames1 = [desc[0] for desc in cur.description]
+            rows1 = cur.fetchall()
 
-        return Response(results, status=status.HTTP_200_OK)
+            # Convert rows into a list of dictionaries
+            data_from_tabledropdownslist = [dict(zip(colnames1, row)) for row in rows1]
+
+            # Second query: Fetching column names from 'ctc_newtable'
+            cur.execute("SELECT column_name,data_type FROM information_schema.columns WHERE table_name = 'ctc_newtable';")
+            colnames2 = [desc[0] for desc in cur.description]
+            rows2 = cur.fetchall()
+
+            # Convert rows into a list of dictionaries
+            data_from_newtable = [dict(zip(colnames2, row)) for row in rows2]
+
+            # Close the cursor and connection
+            cur.close()
+            conn.close()
+
+            # Find common column names in both datasets
+            common_columns = set([d1['column_name'] for d1 in data_from_tabledropdownslist]).intersection(
+                              set([d2['column_name'] for d2 in data_from_newtable]))
+
+            # Process common columns
+            for column_name in common_columns:
+                for item in data_from_newtable:
+                    if item['column_name'] == column_name:
+                        # Find corresponding column info in data_from_tabledropdownslist
+                        for dropdown_item in data_from_tabledropdownslist:
+                            if dropdown_item['column_name'] == column_name:
+                                item['column_type'] = dropdown_item['column_type']
+                                item['elements'] = dropdown_item['elements']
+                        break  # Exit loop after updating
+
+            # Prepare combined data for JSON response
+            combined_data = {
+                'data_from_newtable': data_from_newtable
+            }
+
+            # Convert the data to JSON format
+            json_data = json.dumps(data_from_newtable, default=str)
+
+            # Return the JSON response
+            return Response(json.loads(json_data))
+
+        except psycopg2.Error as e:
+            # Handle PostgreSQL errors
+            return Response({'error': str(e)}, status=500)
+
+        except Exception as e:
+            # Handle other exceptions
+            return Response({'error': str(e)}, status=500)
 
     def post(self, request):
         try:
@@ -138,7 +169,7 @@ class ColumnCreationAPIView(GenericAPIView):
                         ADD CONSTRAINT chk_{column_name}
                         CHECK ({column_name} IN {options})
                     """
-
+                    
                 else:
                     query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type};"
 
@@ -146,7 +177,7 @@ class ColumnCreationAPIView(GenericAPIView):
                     cursor.execute(query)
 
                 if field_type == 'dropdown':
-                    data = TableDropdownsList(table_name=table_name,column_name=column_name)
+                    data = TableDropdownsList(table_name=table_name,column_name=column_name,column_type=field_type)
                     options = serializer.validated_data['options']
                     data.set_elements(options)
                     data.save()
@@ -225,25 +256,4 @@ class DeleteFieldAPIView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# Example data and schema
-example_data = ['name', 'age', 'gender']
 
-example_schema = [
-    {
-        "column_name": "name",
-        "field_type": "text"
-    },
-    {
-        "column_name": "age",
-        "field_type": "text"
-    },
-    {
-        "column_name": "email",
-        "field_type": "text"
-    },
-    {
-        "column_name": "category",
-        "field_type": "dropdown",
-        "options": [1, 2]
-    },
-]
