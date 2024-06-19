@@ -84,7 +84,7 @@ class DynamicFormModel(models.Model):
 class TableDropdownsList(models.Model):
     table_name = models.CharField(max_length=100)
     column_name = models.CharField(max_length=100)
-    column_type = models.CharField(max_length=100)
+    column_type = models.CharField(max_length=100,null=True)
     elements = models.TextField()
 
     def set_elements(self, elements_list):

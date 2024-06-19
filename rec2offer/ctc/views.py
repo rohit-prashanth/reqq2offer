@@ -81,17 +81,9 @@ class CreateOfferLetter(GenericAPIView):
 class ColumnCreationAPIView(APIView):
     def get(self, request, *args, **kwargs):
         try:
-            # Connect to your postgres DB
-            conn = psycopg2.connect(
-                dbname="rec_db",
-                user="postgres",
-                password="viju_1985",
-                host="localhost",
-                port="5432"
-            )
-
+            
             # Create a cursor object
-            cur = conn.cursor()
+            cur = connection.cursor()
 
             # First query: Fetching all columns from 'ctc_tabledropdownslist'
             cur.execute("SELECT id, table_name, column_name, column_type, elements FROM public.ctc_tabledropdownslist;")
@@ -111,7 +103,7 @@ class ColumnCreationAPIView(APIView):
 
             # Close the cursor and connection
             cur.close()
-            conn.close()
+            connection.close()
 
             # Find common column names in both datasets
             common_columns = set([d1['column_name'] for d1 in data_from_tabledropdownslist]).intersection(
