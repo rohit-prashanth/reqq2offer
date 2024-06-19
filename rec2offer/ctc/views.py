@@ -100,6 +100,7 @@ class ColumnCreationAPIView(APIView):
 
             # Convert rows into a list of dictionaries
             data_from_newtable = [dict(zip(colnames2, row)) for row in rows2]
+            
 
             # Close the cursor and connection
             cur.close()
@@ -117,7 +118,7 @@ class ColumnCreationAPIView(APIView):
                         for dropdown_item in data_from_tabledropdownslist:
                             if dropdown_item['column_name'] == column_name:
                                 item['data_type'] = dropdown_item['column_type']
-                                item['elements'] = dropdown_item['elements']
+                                item['elements'] = json.loads(dropdown_item['elements'])
                         break  # Exit loop after updating
 
             # Prepare combined data for JSON response
@@ -126,7 +127,7 @@ class ColumnCreationAPIView(APIView):
             }
 
             # Convert the data to JSON format
-            json_data = json.dumps(data_from_newtable, default=str)
+            json_data = json.dumps(data_from_newtable)
 
             # Return the JSON response
             return Response(json.loads(json_data))
