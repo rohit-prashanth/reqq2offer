@@ -86,7 +86,7 @@ class ColumnCreationAPIView(APIView):
             cur = connection.cursor()
 
             # First query: Fetching all columns from 'ctc_tabledropdownslist'
-            cur.execute("SELECT id, table_name, column_name, column_type, elements FROM public.ctc_tabledropdownslist;")
+            cur.execute("SELECT id ,table_name, column_name, column_type, elements FROM public.ctc_tabledropdownslist;")
             colnames1 = [desc[0] for desc in cur.description]
             rows1 = cur.fetchall()
 
@@ -116,7 +116,7 @@ class ColumnCreationAPIView(APIView):
                         # Find corresponding column info in data_from_tabledropdownslist
                         for dropdown_item in data_from_tabledropdownslist:
                             if dropdown_item['column_name'] == column_name:
-                                item['column_type'] = dropdown_item['column_type']
+                                item['data_type'] = dropdown_item['column_type']
                                 item['elements'] = dropdown_item['elements']
                         break  # Exit loop after updating
 
