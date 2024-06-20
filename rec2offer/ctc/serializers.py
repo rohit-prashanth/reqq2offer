@@ -54,6 +54,14 @@ class ColumnCreationSerializer(serializers.Serializer):
     
     # table_name = serializers.CharField(max_length=100)  # Assuming you'll also provide the table name
 
+class EditColumnCreationSerializer(serializers.Serializer):
+    old_column_name = serializers.CharField(max_length=100)
+    old_data_type = serializers.CharField(max_length=100)
+    old_field_type = serializers.CharField(max_length=100)
+    new_column_name = serializers.CharField(max_length=100)
+    new_data_type = serializers.CharField(max_length=100)
+    new_field_type = serializers.CharField(max_length=100)
+
 
 class ColumnDropDownCreationSerializer(serializers.Serializer):
     column_name = serializers.CharField(max_length=100)
@@ -61,3 +69,12 @@ class ColumnDropDownCreationSerializer(serializers.Serializer):
     field_type = serializers.CharField(max_length=100)
     options = serializers.ListField()
     
+
+class EditColumnDropDownCreationSerializer(serializers.Serializer):
+    old_column_name = serializers.CharField(max_length=100)
+    old_data_type = serializers.CharField(max_length=100)
+    old_field_type = serializers.CharField(max_length=100)
+    new_column_name = serializers.CharField(max_length=100)
+    new_data_type = serializers.CharField(max_length=100)
+    new_field_type = serializers.CharField(max_length=100)
+    options = serializers.ListField()
