@@ -195,7 +195,7 @@ class ColumnCreationAPIView(APIView):
     
     def put(self,request, column_name = None):
         try:
-            field_type_list = ['dropdown','radio','checkbox']
+            field_type_list = ['dropdown','radio']
             print("inside field type list")
             if request.data.get('new_field_type') in field_type_list:
                 print("inside field type list")
@@ -203,6 +203,8 @@ class ColumnCreationAPIView(APIView):
                 serializer = EditColumnDropDownCreationSerializer(data=request.data)
             else:
                 serializer = EditColumnCreationSerializer(data=request.data)
+                
+            
             if serializer.is_valid():
                 print("inside is_valid")
                 old_column_name = serializer.validated_data['old_column_name']
@@ -214,9 +216,20 @@ class ColumnCreationAPIView(APIView):
                 table_name = 'ctc_newtable'
                 if new_data_type == 'text':
                     new_data_type = "varchar"
+                    
+                query = f"UPDATE {table_name} SET {old_column_name} = NULL;"
+                with connection.cursor() as cursor:
+                    cursor.execute(query)
                 if new_field_type == 'dropdown' or new_field_type == 'radio':
                     options = serializer.validated_data['options']
                     options = tuple(options)
+                    obj = TableDropdownsList.objects.filter(table_name=table_name,column_name=column_name)
+                    if obj:
+                        print("inside row delete--")
+                        query = f"ALTER TABLE {table_name} DROP CONSTRAINT chk_{old_column_name};"
+                        with connection.cursor() as cursor:
+                            cursor.execute(query)
+                        obj.delete()
                     # query = f"""
                     #     ALTER TABLE {table_name}
                     #     ADD COLUMN {column_name} VARCHAR(50),
@@ -229,34 +242,65 @@ class ColumnCreationAPIView(APIView):
                     #         ALTER TABLE {table_name} ALTER COLUMN {new_column_name} TYPE {new_data_type} USING {new_column_name}::VARCHAR(50);
                     #         ALTER TABLE {table_name} ADD CONSTRAINT chk_{new_column_name} CHECK ({new_column_name} IN {options});
                     #         COMMIT;"""
-
-                    query = f"""
+                    if old_column_name == new_column_name:
+                        query = f"""
                                 BEGIN;
 
-                                -- Step 1: Rename the column
-                                ALTER TABLE {table_name}
-                                RENAME COLUMN {old_column_name} TO {new_column_name};
-
-                                -- Step 2: Alter the column type to VARCHAR(50)
+                                -- Step 1: Alter the column type to VARCHAR(50)
                                 ALTER TABLE {table_name}
                                 ALTER COLUMN {new_column_name} TYPE VARCHAR(50)
                                 USING {new_column_name}::VARCHAR(50);
 
-                                -- Step 3: Add a check constraint
+                                -- Step 2: Add a check constraint
                                 ALTER TABLE {table_name}
                                 ADD CONSTRAINT chk_{new_column_name} CHECK ({new_column_name} IN {options});
 
                                 COMMIT;
                     """
+                    else:
+                        query = f"""
+                                    BEGIN;
+
+                                    -- Step 1: Rename the column
+                                    ALTER TABLE {table_name}
+                                    RENAME COLUMN {old_column_name} TO {new_column_name};
+
+                                    -- Step 2: Alter the column type to VARCHAR(50)
+                                    ALTER TABLE {table_name}
+                                    ALTER COLUMN {new_column_name} TYPE VARCHAR(50)
+                                    USING {new_column_name}::VARCHAR(50);
+
+                                    -- Step 3: Add a check constraint
+                                    ALTER TABLE {table_name}
+                                    ADD CONSTRAINT chk_{new_column_name} CHECK ({new_column_name} IN {options});
+
+                                    COMMIT;
+                        """
                 elif new_field_type == 'checkbox':
                     # query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} BOOLEAN;"
-                    query = f""" 
+                    obj = TableDropdownsList.objects.filter(table_name=table_name,column_name=column_name)
+                    if obj:
+                        print("inside row delete--")
+                        query = f"ALTER TABLE {table_name} DROP CONSTRAINT chk_{old_column_name};"
+                        with connection.cursor() as cursor:
+                            cursor.execute(query)
+                        obj.delete()
+                    if old_column_name == new_column_name:
+                        query = f""" 
                             BEGIN;
-                            ALTER TABLE {table_name} RENAME COLUMN {old_column_name} TO {new_column_name};
-                            ALTER TABLE {table_name} ALTER COLUMN {new_column_name} TYPE {new_data_type} USING {new_column_name}::BOOLEAN;
+                            ALTER TABLE {table_name} ALTER COLUMN {new_column_name} TYPE BOOLEAN USING {new_column_name}::BOOLEAN;
                             COMMIT;
 
                             """
+                        print("inside checkboc column name same query")
+                    else:
+                        query = f""" 
+                                BEGIN;
+                                ALTER TABLE {table_name} RENAME COLUMN {old_column_name} TO {new_column_name};
+                                ALTER TABLE {table_name} ALTER COLUMN {new_column_name} TYPE BOOLEAN USING {new_column_name}::BOOLEAN;
+                                COMMIT;
+
+                                """
                 else:
                     
                     # query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type};"
