@@ -9,6 +9,7 @@ urlpatterns = [
     # path('create-offer-letter/', views.CreateOfferLetter.as_view(), name='employee_detail'),
 
     path('columns/', views.ColumnCreationAPIView.as_view(), name='create-column'),
+    path('columns/<column_name>/', views.ColumnCreationAPIView.as_view(), name='create-column'),
     path('add-dummydata/', views.DummyDataAPIView.as_view(), name='add-dummydata'),
     path('get-dummydata/', views.DummyDataAPIView.as_view(), name='get-dummydata'),
     path('del-dummydata/<field_name>/', views.DeleteFieldAPIView.as_view(), name='del-dummydata'),

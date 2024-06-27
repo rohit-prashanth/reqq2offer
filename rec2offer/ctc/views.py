@@ -193,7 +193,7 @@ class ColumnCreationAPIView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
     
-    def put(self,request):
+    def put(self,request, column_name = None):
         try:
             field_type_list = ['dropdown','radio','checkbox']
             print("inside field type list")
@@ -261,13 +261,26 @@ class ColumnCreationAPIView(APIView):
                     
                     # query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type};"
                     print("inside else part")
-                    query = f""" 
+                    listdatatypes = ['radio','dropdown']
+                    if old_column_name == new_column_name and old_data_type in listdatatypes and new_data_type not in listdatatypes:
+                        print("changing listdatarypes")
+                      
+                        query = f""" 
                             BEGIN;
-                            ALTER TABLE {table_name} RENAME COLUMN {old_column_name} TO {new_column_name};
+                            ALTER TABLE {table_name} DROP CONSTRAINT chk_{new_column_name};
                             ALTER TABLE {table_name} ALTER COLUMN {new_column_name} TYPE {new_data_type} USING {new_column_name}::{new_data_type};
                             COMMIT;
 
                             """
+                    else:
+                        
+                        query = f""" 
+                                BEGIN;
+                                ALTER TABLE {table_name} RENAME COLUMN {old_column_name} TO {new_column_name};
+                                ALTER TABLE {table_name} ALTER COLUMN {new_column_name} TYPE {new_data_type} USING {new_column_name}::{new_data_type};
+                                COMMIT;
+
+                                """
 
                 with connection.cursor() as cursor:
                     cursor.execute(query)
@@ -277,7 +290,12 @@ class ColumnCreationAPIView(APIView):
                     options = serializer.validated_data['options']
                     data.set_elements(options)
                     data.save()
-                    
+                
+                elif new_field_type == 'text' or new_field_type == 'boolean':
+                    obj = TableDropdownsList.objects.filter(table_name=table_name,column_name=column_name)
+                    if obj:
+                        print("inside row delete")
+                        obj.delete()
                     #retrieving list
                     # retrieved = MyModel.objects.get(id=m.id)
                     # elements = retrieved.get_elements()  # returns [1, 2, 3, 4]
