@@ -150,7 +150,7 @@ class ColumnCreationAPIView(APIView):
                 print(request.data.get('field_type'))
                 serializer = ColumnDropDownCreationSerializer(data=request.data)
             else:
-                serializer = self.get_serializer(data=request.data)
+                serializer = ColumnCreationSerializer(data=request.data)
             if serializer.is_valid():
                 print("inside is_valid")
                 column_name = serializer.validated_data['column_name']
@@ -169,8 +169,9 @@ class ColumnCreationAPIView(APIView):
                 elif field_type == 'checkbox':
                     query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} BOOLEAN;"
                 else:
-                    if new_data_type == 'text':
-                        new_data_type = "varchar"
+                    if data_type == 'text':
+                        data_type = "varchar"
+                        print("inside text block")
                     query = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type};"
 
                 with connection.cursor() as cursor:
